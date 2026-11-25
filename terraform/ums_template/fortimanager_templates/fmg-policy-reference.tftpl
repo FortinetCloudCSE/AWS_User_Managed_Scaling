@@ -1,0 +1,27 @@
+# Firewall policies for the FortiManager policy package of the UMS group.
+# Create them in Policy & Objects > Policy Packages. "private-zone" is the zone of the GENEVE
+# tunnels that the CLI template creates; "${public_port}" is the internet-facing port.
+config firewall policy
+    edit 0
+        set name "private_to_internet"
+        set srcintf "private-zone"
+        set dstintf "${public_port}"
+        set action accept
+        set srcaddr "all"
+        set dstaddr "all"
+        set schedule "always"
+        set service "ALL"
+        set nat enable
+    next
+    edit 0
+        set name "private_to_private"
+        set srcintf "private-zone"
+        set dstintf "private-zone"
+        set action accept
+        set srcaddr "all"
+        set dstaddr "all"
+        set schedule "always"
+        set service "ALL"
+        set nat disable
+    next
+end

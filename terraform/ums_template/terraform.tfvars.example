@@ -1,0 +1,333 @@
+#====================================================================================================
+# REGION AND AVAILABILITY ZONES
+#====================================================================================================
+# AWS region where all resources will be deployed
+# Availability zones are specified as single letters (a, b, c, etc.) which will be appended to the region
+# Example: us-west-2 + "a" = us-west-2a
+#
+aws_region          = "us-west-2"
+availability_zone_1 = "a"
+availability_zone_2 = "c"
+
+#====================================================================================================
+# RESOURCE IDENTIFICATION
+#====================================================================================================
+# Customer Prefix (cp) and Environment (env) are prepended to all resources for identification
+# Format: "<cp>-<env>-<resource_name>"
+# Example: "acme-test-inspection-vpc", "acme-test-tgw"
+#
+# CRITICAL: These values MUST MATCH between existing_vpc_resources and ums_template
+# The ums_template uses these values to discover resources via AWS resource tags
+# Mismatched values will cause resource discovery failures
+#
+cp  = "acme"  # Customer prefix - use your company/project name
+env = "test"  # Environment: prod, test, dev, staging, etc.
+
+#====================================================================================================
+# ADDITIONAL TAGS
+#====================================================================================================
+# Tags added here are applied to ALL resources created by this template AND the upstream Fortinet
+# module (via AWS provider default_tags). Add organization-specific tags such as cost center, owner,
+# or project here. Do not modify provider.tf or vpc_inspection.tf to add tags.
+#
+# Example:
+# additional_tags = {
+#   CostCenter = "12345"
+#   Owner      = "network-team"
+#   Project    = "fortigate-inspection"
+# }
+#
+additional_tags = {}
+
+#====================================================================================================
+# SECURITY VARIABLES
+#====================================================================================================
+# AWS EC2 keypair name for SSH access to FortiGate instances (must already exist in target region)
+# Use: aws ec2 describe-key-pairs to list available keypairs
+#
+keypair = ""
+
+# List of CIDRs for restricting SSH and HTTPS access to FortiGate management
+# Used to create security group rules that only allow connections from your locations
+# Format: ["x.x.x.x/32", "y.y.y.0/24"] for multiple CIDRs
+# Find your IP: curl ifconfig.me
+#
+vpc_cidr_sg = []
+
+# Password the bootstrap configuration sets for the FortiGate 'admin' user - REQUIRED
+# FortiManager manages the FortiGates afterwards; it can change the password through a system template.
+# Password requirements: Minimum 8 characters
+#
+fortigate_admin_password = ""
+
+#====================================================================================================
+# FORTIGATE ARCHITECTURE CONFIGURATION
+#====================================================================================================
+# Internet egress mode - defines how FortiGates access the internet
+# Options:
+#   "nat_gw" - Use NAT Gateway for centralized egress (predictable source IP, additional cost)
+#   "eip"    - Use Elastic IP per instance (distributed egress, no NAT Gateway cost)
+# See Solution Components documentation for detailed comparison
+#
+# Must agree with how the inspection VPC was built: "nat_gw" when create_nat_gateway_subnets
+# = true in existing_vpc_resources, "eip" when it is false. terraform plan stops with an error
+# when the public subnets' default route does not match this setting.
+#
+access_internet_mode = "nat_gw"
+
+# Firewall policy mode - defines FortiGate interface architecture
+# Options:
+#   "1-arm" - Single interface for data plane (hairpin traffic pattern)
+#   "2-arm" - Separate trusted/untrusted interfaces (traditional firewall model)
+# See Solution Components documentation for traffic flow details
+#
+firewall_policy_mode = "1-arm"
+
+#====================================================================================================
+# MANAGEMENT VPC INTEGRATION
+#====================================================================================================
+# Enable dedicated management VPC - connects FortiGate management interfaces to separate management VPC
+# Set to true if you deployed management VPC with existing_vpc_resources template
+# Set to false if not using dedicated management VPC or managing FortiGates via data plane
+#
+enable_dedicated_management_vpc = false
+
+# NOTE: Management VPC resources are discovered automatically using Fortinet-Role tags
+# Tags are constructed from cp and env: {cp}-{env}-management-vpc, {cp}-{env}-management-public-az1, etc.
+# Ensure existing_vpc_resources uses the same cp and env values
+
+# Enable dedicated management ENI - adds a management port in dedicated subnets of the inspection VPC
+# (port2 in 1-arm mode, port3 in 2-arm mode). The FortiManager CLI template gives that port routes to
+# the management VPC and the admin CIDRs (vpc_cidr_sg); the internet-facing port keeps the default route.
+#
+enable_dedicated_management_eni = false
+
+# Enable public IP on FortiGate's dedicated management port
+# Set to false if managing FortiGates via VPN/Direct Connect/private path only
+# Only relevant when enable_dedicated_management_vpc or enable_dedicated_management_eni is true
+# Ignored (forced false) when enable_dedicated_management_nat_gateway = true below
+# If enable_dedicated_management_eni is true, must also match enable_dedicated_management_public_ip
+# in existing_vpc_resources/terraform.tfvars -- when false there, the dedicated management
+# subnets route via the inspection VPC's NAT Gateway instead of the IGW (requires
+# access_internet_mode = "nat_gw" above), otherwise there's no egress path for that interface.
+#
+enable_fgt_management_public_ip = true
+
+# Must match enable_dedicated_management_nat_gateway in existing_vpc_resources/terraform.tfvars.
+# When true, the management VPC egresses through a single dedicated NAT Gateway instead of
+# per-interface public IPs -- this forces enable_fgt_management_public_ip off above,
+# regardless of its own setting. See existing_vpc_resources/terraform.tfvars.example for the
+# full rationale (Direct Connect customers who don't want any management-plane EIP exposed,
+# but still need outbound internet for FortiGuard updates and license verification).
+#
+enable_dedicated_management_nat_gateway = false
+
+#====================================================================================================
+# TRANSIT GATEWAY INTEGRATION
+#====================================================================================================
+# Enable Transit Gateway attachment - attach inspection VPC to existing Transit Gateway
+# Set to true for centralized egress architectures
+# Set to false for distributed inspection architectures
+#
+enable_tgw_attachment = true
+
+# Transit Gateway name - name tag of existing Transit Gateway to attach to
+# For lab environment: Use TGW created by existing_vpc_resources (default: "acme-test-tgw")
+# For production: Change to your existing production Transit Gateway name
+# IMPORTANT: TGW must exist and be in "Available" state before deployment
+#
+attach_to_tgw_name = "acme-test-tgw"
+
+# Create TGW routes for existing VPC resources - only for lab environments
+# Set to true ONLY if you deployed the existing_vpc_resources template
+# Set to false for production deployments using existing Transit Gateway
+#
+create_tgw_routes_for_existing = false
+
+
+# Distributed egress (dual-egress: centralized + distributed) -- attaches a GWLB Endpoint to each
+# tag-discovered distributed VPC (built by existing_vpc_resources) plus any explicit
+# distributed_egress_endpoint_subnet_ids, sharing the same GWLB Endpoint Service as above.
+#
+enable_distributed_egress = true
+
+# Explicit list of GWLBe-placement subnet IDs in customer-owned distributed VPCs not discovered
+# via Fortinet-Role tags. A GWLB Endpoint is created in each, but -- unlike tag-discovered
+# subnets -- their route tables are never modified; that's left to the customer.
+#
+# distributed_egress_endpoint_subnet_ids = ["subnet-xxxxxxxxxxxxxxxxx"]
+
+#====================================================================================================
+# GATEWAY LOAD BALANCER CONFIGURATION
+#====================================================================================================
+# Allow cross-zone load balancing - GWLB can send traffic to FortiGates in any AZ
+# Recommended: true for production (maximizes availability)
+# Set to false to avoid cross-AZ data transfer charges ($0.01/GB)
+#
+allow_cross_zone_load_balancing = true
+
+# GWLB Endpoint names - used for route table lookups
+# These names are assigned to GWLB endpoints during creation
+# Used by route table configuration to direct traffic through endpoints
+#
+endpoint_name_az1 = "asg-gwlbe_az1"
+endpoint_name_az2 = "asg-gwlbe_az2"
+
+# Modify existing route tables - allows ums_template to update route tables in the existing VPC
+# When true: Creates routes pointing private subnet traffic to GWLB endpoints for inspection
+# When false: Does not modify existing routes (manual route configuration required)
+# WARNING: Setting to true will replace existing default routes in private subnets
+#
+modify_existing_route_tables = true
+
+# GWLB Health Check - uses FortiGate probe-response on port 8008
+# The FortiGate answers only after FortiManager has installed the CLI template (which configures
+# probe-response), so the GWLB sends traffic only to FortiGates that FortiManager has configured.
+# healthy_threshold x interval = minimum time before a new FortiGate can pass (5 x 60s = 5 min)
+#
+gwlb_health_check_port     = 8008  # FortiGate probe-response port
+gwlb_health_check_interval = 60    # Seconds between health checks
+gwlb_healthy_threshold     = 5     # Consecutive successes required before target is healthy
+
+# ASG Health Check Grace Period
+# Must exceed boot + FortiManager onboarding (registration, FortiFlex license and its reboot,
+# CLI template install) + the GWLB healthy threshold. Too short, and the Auto Scaling group
+# replaces FortiGates before FortiManager has finished configuring them.
+#
+asg_health_check_grace_period = 1200
+
+#====================================================================================================
+# NETWORK CIDR CONFIGURATION
+#====================================================================================================
+# Inspection VPC CIDR - where FortiGate autoscale group and GWLB are deployed
+# Ensure this does not overlap with management VPC or spoke VPCs
+#
+vpc_cidr_inspection = "10.0.0.0/16"
+
+# Management VPC CIDR (must match existing_vpc_resources)
+# The FortiManager CLI template routes it through the dedicated management port, when there is one
+#
+vpc_cidr_management = "10.3.0.0/16"
+
+# Spoke VPC CIDRs - for route table and TGW configuration
+#
+vpc_cidr_east = "192.168.0.0/24"  # East spoke VPC
+vpc_cidr_west = "192.168.1.0/24"  # West spoke VPC
+
+# List of all spoke VPC CIDRs south of the TGW that need a FortiGate east-west
+# inspection route. Leave unset/empty to default to [vpc_cidr_east, vpc_cidr_west].
+# Override with your real production spoke list if it's different from the
+# demo east/west VPCs above (e.g. more spokes, or spokes outside this template).
+#
+# spoke_cidrs = ["192.168.0.0/24", "192.168.1.0/24", "10.20.0.0/16"]
+
+# Number of bits to use for subnet CIDR calculation
+# Formula: <vpc_cidr>/<vpc_cidr_prefix + subnet_bits>
+# Example: 10.0.0.0/16 with subnet_bits=8 creates /24 subnets (10.0.0.0/24, 10.0.1.0/24, etc.)
+# Recommended: 8 for most deployments
+#
+subnet_bits = 8
+
+#====================================================================================================
+# FORTIGATE INSTANCE CONFIGURATION
+#====================================================================================================
+# FortiGate instance type - determines CPU, memory, network performance, and cost
+# The FortiFlex configuration that FortiManager uses must have the same number of CPUs.
+# Recommended:
+#   c6i.xlarge (4 vCPU) - Small to medium deployments
+#   c6i.2xlarge (8 vCPU) - Medium deployments
+#   c7gn.xlarge (4 vCPU, ARM) - Cost-optimized with excellent network performance
+#
+fgt_instance_type = "c6i.xlarge"
+
+# FortiOS version to deploy, as "X.Y.Z"
+# UMS requires FortiOS 7.6.8 or later on the 7.6 branch, or 8.0.2 or later.
+# FortiManager must run the same or a later version.
+#
+fortios_version = "7.6.8"
+
+# FortiGate GUI port - HTTPS port for web management interface
+# Default: 443 (standard HTTPS)
+#
+fortigate_gui_port = 443
+
+#====================================================================================================
+# UMS GROUP CAPACITY
+#====================================================================================================
+# Prefix for the resources the Fortinet module creates. The Auto Scaling group is named
+# "<asg_module_prefix>-fgt_ums_asg"; the GWLB endpoints "<asg_module_prefix>-gwlbe_az1", ...
+#
+asg_module_prefix = "asg"
+
+# Initial size of the Auto Scaling group. After deployment FortiManager owns the instance count:
+# Device Manager > Device & Groups > right-click the UMS group > Auto-Scale Instance Count.
+# Before running terraform apply again, set these three to the count FortiManager last set,
+# otherwise Terraform sets the Auto Scaling group back to these values.
+#
+asg_min_size     = 1
+asg_max_size     = 1
+asg_desired_size = 1
+
+#====================================================================================================
+# FORTIMANAGER (REQUIRED FOR UMS)
+#====================================================================================================
+# FortiManager address the FortiGates register to.
+#   - FortiManager Elastic IP (existing_vpc_resources output fortimanager_public_ip) when the
+#     FortiGates reach FortiManager over the internet. FortiManager's security group must then allow
+#     TCP 541 from the FortiGates' public egress addresses (fgfm_additional_source_cidrs).
+#   - FortiManager private IP (output fortimanager_private_ip) when the FortiGates reach it privately.
+#
+fortimanager_ip = ""
+
+# FortiManager serial number (FortiManager CLI: get system status)
+#
+fortimanager_sn = ""
+
+# API key of the FortiManager REST API administrator selected in the auto-onboarding rule
+# (System Settings > Administrators > Create New > REST API Admin, Automatic Register enabled).
+# Keep it out of version control.
+#
+fortimanager_api_key = ""
+
+# Pre-shared secret of 'config system auto-scale' on the members of the UMS group
+#
+ums_autoscale_psksecret = ""
+
+# Seconds between auto-scale heartbeats
+#
+ums_hb_interval = 10
+
+# VRF the FortiGates use to reach FortiManager. Leave unset (default VRF).
+#
+# fortimanager_vrf_select = 0
+
+#====================================================================================================
+# IMPORTANT NOTES
+#====================================================================================================
+#
+# 1. MATCHING VALUES WITH EXISTING_VPC_RESOURCES
+#    - cp and env MUST match between templates for Fortinet-Role tag discovery
+#    - attach_to_tgw_name MUST match between templates for TGW attachment
+#    - vpc_cidr_inspection and vpc_cidr_management MUST match
+#    - access_internet_mode MUST match create_nat_gateway_subnets
+#
+# 2. FORTIMANAGER COMES FIRST
+#    - Configure FortiManager (API admin, AWS SDN connector, UMS connector, FortiFlex connector,
+#      auto-onboarding rule) before applying this template: each FortiGate registers once, at boot
+#    - FortiManager needs: config system global / set fgfm-allow-vm enable / end
+#    - FortiManager must be reachable from the FortiGates on TCP 541
+#
+# 3. LICENSING
+#    - FortiFlex only. FortiManager's FortiFlex connector licenses each FortiGate when the
+#      auto-onboarding rule onboards it. This template holds no FortiFlex credentials.
+#
+# 4. CONFIGURATION
+#    - terraform apply writes fortimanager/fmg-cli-template.txt (GENEVE tunnels to the GWLB,
+#      probe-response, routes). Import it into FortiManager as a CLI template and assign it to the
+#      UMS group, with a policy package that holds the policies in fortimanager/fmg-policy-reference.txt
+#
+# 5. SCALING
+#    - FortiManager sets the instance count. Scale-in needs a manual clean-up of the removed
+#      FortiGate in FortiManager.
+#
+#====================================================================================================
