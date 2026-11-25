@@ -28,8 +28,8 @@ This repository wraps the Fortinet Terraform module [`fortinetdev/cloud-modules/
 
 | Item | Requirement |
 |---|---|
-| FortiOS | 7.6.8 or later on 7.6, or 8.0.2 or later |
-| FortiManager | 7.6.8 or later on 7.6, or 8.0.2 or later, and the same or a later version than the FortiGates |
+| FortiOS | 7.6.4 or later (8.0 included) |
+| FortiManager | 7.6.4 or later (8.0 included), and the same or a later version than the FortiGates |
 | Licensing | FortiFlex, through FortiManager's FortiFlex connector |
 | FortiManager address | Fixed (Elastic IP or fixed private IP), reachable from the FortiGates on TCP 541 |
 | Terraform | 1.5 or later, AWS provider credentials for the target account |

@@ -176,16 +176,15 @@ variable "gwlb_healthy_threshold" {
 # FortiGate UMS group
 #
 variable "fortios_version" {
-  description = "FortiOS version of the FortiGate instances, as X.Y.Z. UMS requires 7.6.8 or later on the 7.6 branch, or 8.0.2 or later. Must not be later than the FortiManager version."
+  description = "FortiOS version of the FortiGate instances, as X.Y.Z. UMS requires 7.6.4 or later (8.0 included). Must not be later than the FortiManager version."
   type        = string
   validation {
     condition = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.fortios_version)) && (
-      (tonumber(split(".", var.fortios_version)[0]) == 7 && tonumber(split(".", var.fortios_version)[1]) == 6 && tonumber(split(".", var.fortios_version)[2]) >= 8) ||
-      (tonumber(split(".", var.fortios_version)[0]) == 8 && tonumber(split(".", var.fortios_version)[1]) == 0 && tonumber(split(".", var.fortios_version)[2]) >= 2) ||
-      (tonumber(split(".", var.fortios_version)[0]) == 8 && tonumber(split(".", var.fortios_version)[1]) > 0) ||
-      tonumber(split(".", var.fortios_version)[0]) > 8
+      (tonumber(split(".", var.fortios_version)[0]) == 7 && tonumber(split(".", var.fortios_version)[1]) == 6 && tonumber(split(".", var.fortios_version)[2]) >= 4) ||
+      (tonumber(split(".", var.fortios_version)[0]) == 7 && tonumber(split(".", var.fortios_version)[1]) > 6) ||
+      tonumber(split(".", var.fortios_version)[0]) > 7
     )
-    error_message = "fortios_version must be X.Y.Z, and 7.6.8 or later on 7.6, or 8.0.2 or later."
+    error_message = "fortios_version must be X.Y.Z and 7.6.4 or later."
   }
 }
 variable "fgt_instance_type" {

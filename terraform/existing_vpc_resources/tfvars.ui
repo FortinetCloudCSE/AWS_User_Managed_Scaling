@@ -464,7 +464,7 @@ fortimanager_instance_type = "m5.large"
 
 # @ui-type: text
 # @ui-label: OS Version
-# @ui-description: FortiManager OS version (UMS requires 7.6.8+ or 8.0.2+)
+# @ui-description: FortiManager OS version (UMS requires 7.6.4 or later)
 # @ui-required: true
 # @ui-width: half
 # @ui-default: 7.6.8

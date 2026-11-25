@@ -11,7 +11,7 @@ Terraform and a Hugo guide for a **FortiGate User Managed Scaling (UMS)** group 
 
 - **FortiFlex only.** No BYOL license files, no PAYG/on-demand group. FortiManager's FortiFlex connector licenses the FortiGates, so the templates hold no FortiFlex credentials. The module runs with `license_type = "byol"` because FortiFlex uses the BYOL AMI.
 - **FortiManager is required**, and it drives scaling. There are no CloudWatch alarms or scaling policies.
-- **Minimum versions:** FortiOS and FortiManager 7.6.8 (7.6 branch) or 8.0.2. `fortios_version` has a validation for this. FortiManager must run the same or a later version than the FortiGates.
+- **Minimum versions:** FortiOS and FortiManager 7.6.4 or later (8.0 included), per Fortinet Product Management. `fortios_version` has a validation for this; the example defaults use 7.6.8. FortiManager must run the same or a later version than the FortiGates.
 - **One module call, one Auto Scaling group** (`<asg_module_prefix>-fgt_ums_asg`). There are no blue-green slots and no upgrade toolset; don't add them unless asked.
 
 ## Layout

@@ -109,7 +109,7 @@ fgt_instance_type = "c6i.xlarge"
 
 # @ui-type: text
 # @ui-label: FortiOS Version
-# @ui-description: FortiOS version to deploy, as X.Y.Z (UMS requires 7.6.8+ or 8.0.2+)
+# @ui-description: FortiOS version to deploy, as X.Y.Z (UMS requires 7.6.4 or later)
 # @ui-required: true
 # @ui-width: half
 # @ui-default: 7.6.8

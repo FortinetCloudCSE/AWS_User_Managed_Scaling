@@ -13,7 +13,7 @@ Fortinet's UMS guides do not describe a UMS-specific firmware procedure. This pa
 ## Rules
 
 - FortiManager must run the **same or a later** version than the FortiGates. Upgrade FortiManager first.
-- Stay at or above the UMS minimums: FortiOS 7.6.8 (7.6) or 8.0.2.
+- Stay at or above the UMS minimum: FortiOS 7.6.4.
 - Follow the FortiOS **upgrade path** ([upgrade path tool](https://docs.fortinet.com/upgrade-tool)) from the running version to the target.
 - FortiManager needs a valid firmware contract to upgrade FortiGates.
 - Back up first: FortiManager (**System Settings** > **Dashboard** > **System Information** > **Backup**) and a revision of each FortiGate's configuration (FortiManager keeps them in **Revision History**).

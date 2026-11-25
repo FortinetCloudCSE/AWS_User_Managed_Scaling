@@ -17,7 +17,7 @@ Terraform and documentation for a **FortiGate User Managed Scaling (UMS)** group
 
 ## Requirements
 
-- FortiOS and FortiManager 7.6.8 or later (7.6), or 8.0.2 or later; FortiManager at the same or a later version than the FortiGates
+- FortiOS and FortiManager 7.6.4 or later (including 8.0); FortiManager at the same or a later version than the FortiGates
 - FortiFlex program with a FortiGate-VM configuration
 - Terraform 1.5 or later, AWS credentials
 
