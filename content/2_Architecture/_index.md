@@ -6,6 +6,9 @@ weight: 20
 
 ## Components
 
+![FortiGate UMS on AWS: centralized traffic through the Transit Gateway, distributed egress through GWLB endpoints, GENEVE to the FortiGate UMS group, and FortiManager control over FGFM, the AWS SDN connector and the FortiFlex connector](ums-architecture.svg)
+
+
 | Component | Built by | Role |
 |---|---|---|
 | Inspection VPC (public, GWLB endpoint, private, optional NAT Gateway and management subnets) | `existing_vpc_resources` | Holds the FortiGates and the Gateway Load Balancer |
@@ -41,6 +44,8 @@ weight: 20
 Both paths share one Gateway Load Balancer endpoint service and the same FortiGates. The FortiGates tell the paths apart by source and destination CIDR (`spoke_cidrs` for centralized, the distributed VPC CIDRs for distributed), so these CIDRs must not overlap.
 
 ## How UMS works on AWS
+
+![How a new FortiGate joins the UMS group: the administrator sets the count, the SDN connector changes the Auto Scaling group, the FortiGate registers, FortiManager onboards, licenses and configures it, and the GWLB health check passes](ums-onboarding-flow.svg)
 
 | Step | From | To | Action |
 |---|---|---|---|

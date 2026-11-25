@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" font-family="Helvetica, Arial, sans-serif">
+<title>Scale out and scale in</title>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker></defs>
+<rect width="1200" height="360" fill="#fff"/>
+<text x="600.0" y="34" text-anchor="middle" font-size="18" font-weight="bold" fill="#333">Scale out and scale in</text>
+<rect x="10.0" y="60" width="262" height="190" rx="8" fill="#fff" stroke="#6b3fa0" stroke-width="2"/>
+<rect x="10.0" y="60" width="262" height="46" rx="8" fill="#6b3fa0"/><rect x="10.0" y="90" width="262" height="16" fill="#6b3fa0"/>
+<circle cx="34.0" cy="83" r="13" fill="#fff"/><text x="34.0" y="88" text-anchor="middle" font-size="14" font-weight="bold" fill="#6b3fa0">1</text>
+<text x="56.0" y="89" font-size="15" font-weight="bold" fill="#fff">Set the count</text>
+<text x="26.0" y="130" font-size="12" font-style="italic" fill="#777">FortiManager &gt; Device &amp; Groups</text>
+<text x="26.0" y="154" font-size="13" fill="#333">Right-click the UMS group</text>
+<text x="26.0" y="174" font-size="13" fill="#333">Auto-Scale Instance Count</text>
+<text x="26.0" y="194" font-size="13" fill="#333">min = max = desired</text>
+<line x1="276.0" y1="155.0" x2="312.0" y2="155.0" stroke="#555" stroke-width="2.5" marker-end="url(#a)"/>
+<rect x="316.0" y="60" width="262" height="190" rx="8" fill="#fff" stroke="#e08a2c" stroke-width="2"/>
+<rect x="316.0" y="60" width="262" height="46" rx="8" fill="#e08a2c"/><rect x="316.0" y="90" width="262" height="16" fill="#e08a2c"/>
+<circle cx="340.0" cy="83" r="13" fill="#fff"/><text x="340.0" y="88" text-anchor="middle" font-size="14" font-weight="bold" fill="#e08a2c">2</text>
+<text x="362.0" y="89" font-size="15" font-weight="bold" fill="#fff">AWS adds or removes</text>
+<text x="332.0" y="130" font-size="12" font-style="italic" fill="#777">AWS Auto Scaling group</text>
+<text x="332.0" y="154" font-size="13" fill="#333">SDN connector sets the counts</text>
+<text x="332.0" y="174" font-size="13" fill="#333">Scale-out: launch + bootstrap</text>
+<text x="332.0" y="194" font-size="13" fill="#333">Scale-in: GWLB drains 30 s,</text>
+<text x="332.0" y="214" font-size="13" fill="#333">then the instance terminates</text>
+<line x1="582.0" y1="155.0" x2="618.0" y2="155.0" stroke="#555" stroke-width="2.5" marker-end="url(#a)"/>
+<rect x="622.0" y="60" width="262" height="190" rx="8" fill="#fff" stroke="#da291c" stroke-width="2"/>
+<rect x="622.0" y="60" width="262" height="46" rx="8" fill="#da291c"/><rect x="622.0" y="90" width="262" height="16" fill="#da291c"/>
+<circle cx="646.0" cy="83" r="13" fill="#fff"/><text x="646.0" y="88" text-anchor="middle" font-size="14" font-weight="bold" fill="#da291c">3</text>
+<text x="668.0" y="89" font-size="15" font-weight="bold" fill="#fff">FortiManager onboards</text>
+<text x="638.0" y="130" font-size="12" font-style="italic" fill="#777">FortiManager, after a scale-out</text>
+<text x="638.0" y="154" font-size="13" fill="#333">Register with the API key</text>
+<text x="638.0" y="174" font-size="13" fill="#333">FortiFlex license (reboot)</text>
+<text x="638.0" y="194" font-size="13" fill="#333">CLI template + policy package</text>
+<text x="638.0" y="214" font-size="13" fill="#333">GWLB health check passes</text>
+<rect x="928.0" y="60" width="262" height="190" rx="8" fill="#fff" stroke="#a51d12" stroke-width="2" stroke-dasharray="7 4"/>
+<rect x="928.0" y="60" width="262" height="46" rx="8" fill="#a51d12"/><rect x="928.0" y="90" width="262" height="16" fill="#a51d12"/>
+<circle cx="952.0" cy="83" r="13" fill="#fff"/><text x="952.0" y="88" text-anchor="middle" font-size="14" font-weight="bold" fill="#a51d12">4</text>
+<text x="974.0" y="89" font-size="15" font-weight="bold" fill="#fff">Manual clean-up</text>
+<text x="944.0" y="130" font-size="12" font-style="italic" fill="#777">FortiManager + FortiFlex, after a scale-in</text>
+<text x="944.0" y="154" font-size="13" fill="#333">Delete the terminated device</text>
+<text x="944.0" y="174" font-size="13" fill="#333">in Device &amp; Groups</text>
+<text x="944.0" y="194" font-size="13" fill="#333">Stop its FortiFlex entitlement</text>
+<path d="M447.0,254 V280 H1059.0 V258" fill="none" stroke="#555" stroke-width="2.5" marker-end="url(#a)"/>
+<text x="753.0" y="274" text-anchor="middle" font-size="12" fill="#555">scale-in</text>
+<text x="600.0" y="330" text-anchor="middle" font-size="13" fill="#a51d12">Before the next terraform apply of ums_template, copy the current counts into asg_min_size, asg_max_size and asg_desired_size.</text>
+</svg>

@@ -7,6 +7,8 @@ weight: 50
 
 # Deployment
 
+![Deployment order: existing_vpc_resources, then FortiFlex and FortiManager configuration, then ums_template, then the CLI template and policy package](deployment-order.svg)
+
 1. [existing_vpc_resources](5_1_existing_vpc_resources/): lab VPCs, Transit Gateway, distributed egress VPCs, management VPC with FortiManager
 2. Configure FortiFlex and FortiManager: [FortiManager Configuration](../4_fortimanager/)
 3. [ums_template](5_2_ums_template/): the FortiGate UMS group behind the Gateway Load Balancer

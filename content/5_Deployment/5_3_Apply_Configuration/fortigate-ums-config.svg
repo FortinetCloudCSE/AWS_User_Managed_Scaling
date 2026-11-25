@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 560" width="1180" height="560" font-family="Helvetica, Arial, sans-serif">
+  <title>What FortiManager installs on each FortiGate of the UMS group (2-arm example)</title>
+  <defs>
+    <marker id="aRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#da291c"/></marker>
+    <marker id="aGray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker>
+    <marker id="aPurple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b3fa0"/></marker>
+  </defs>
+  <rect width="1180" height="560" fill="#ffffff"/>
+
+  <!-- GWLB addresses -->
+  <rect x="30" y="150" width="200" height="74" rx="6" fill="#fff8f0" stroke="#e08a2c" stroke-width="1.5"/>
+  <text x="130" y="178" text-anchor="middle" font-size="14" font-weight="bold" fill="#b5651d">GWLB address AZ1</text>
+  <text x="130" y="200" text-anchor="middle" font-size="12" fill="#555">gwlb_ips["az1"]</text>
+  <rect x="30" y="300" width="200" height="74" rx="6" fill="#fff8f0" stroke="#e08a2c" stroke-width="1.5"/>
+  <text x="130" y="328" text-anchor="middle" font-size="14" font-weight="bold" fill="#b5651d">GWLB address AZ2</text>
+  <text x="130" y="350" text-anchor="middle" font-size="12" fill="#555">gwlb_ips["az2"]</text>
+
+  <!-- Internet / management -->
+  <rect x="650" y="14" width="220" height="40" rx="20" fill="#eef2f6" stroke="#8a99a8"/>
+  <text x="760" y="39" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">Internet (NAT Gateway / EIP)</text>
+  <rect x="610" y="506" width="300" height="40" rx="6" fill="#f6f2fb" stroke="#6b3fa0"/>
+  <text x="760" y="531" text-anchor="middle" font-size="13" fill="#333">vpc_cidr_management, vpc_cidr_sg (admin CIDRs)</text>
+
+  <!-- FortiGate -->
+  <rect x="300" y="90" width="580" height="380" rx="10" fill="#fdecea" stroke="#da291c" stroke-width="2"/>
+  <text x="318" y="118" font-size="16" font-weight="bold" fill="#a51d12">FortiGate (member of the UMS group)</text>
+
+  <!-- ports -->
+  <rect x="282" y="236" width="70" height="50" rx="5" fill="#da291c"/>
+  <text x="317" y="258" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">port1</text>
+  <text x="317" y="275" text-anchor="middle" font-size="10" fill="#fff">GENEVE side</text>
+  <rect x="725" y="72" width="70" height="40" rx="5" fill="#da291c"/>
+  <text x="760" y="97" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">port2</text>
+  <rect x="725" y="450" width="70" height="40" rx="5" fill="#da291c"/>
+  <text x="760" y="475" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">port3</text>
+
+  <!-- private zone -->
+  <rect x="380" y="150" width="200" height="230" rx="8" fill="#ffffff" stroke="#da291c" stroke-dasharray="6 4" stroke-width="1.5"/>
+  <text x="480" y="172" text-anchor="middle" font-size="13" font-weight="bold" fill="#a51d12">zone private-zone</text>
+  <rect x="400" y="190" width="160" height="60" rx="5" fill="#fff" stroke="#6b3fa0" stroke-width="1.5"/>
+  <text x="480" y="214" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">geneve-az1</text>
+  <text x="480" y="234" text-anchor="middle" font-size="11" fill="#555">type ppp, interface port1</text>
+  <rect x="400" y="300" width="160" height="60" rx="5" fill="#fff" stroke="#6b3fa0" stroke-width="1.5"/>
+  <text x="480" y="324" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">geneve-az2</text>
+  <text x="480" y="344" text-anchor="middle" font-size="11" fill="#555">type ppp, interface port1</text>
+
+  <!-- tunnels -->
+  <path d="M400,220 C330,220 300,190 234,187" fill="none" stroke="#da291c" stroke-width="2.5" stroke-dasharray="7 4" marker-end="url(#aRed)"/>
+  <path d="M400,330 C330,330 300,337 234,337" fill="none" stroke="#da291c" stroke-width="2.5" stroke-dasharray="7 4" marker-end="url(#aRed)"/>
+  <text x="40" y="258" font-size="11" fill="#da291c">tunnel remote-ip, plus a</text>
+  <text x="40" y="274" font-size="11" fill="#da291c">/32 route to it via port1</text>
+
+  <!-- egress / management -->
+  <line x1="760" y1="72" x2="760" y2="58" stroke="#555" stroke-width="2" marker-end="url(#aGray)"/>
+  <line x1="760" y1="490" x2="760" y2="502" stroke="#6b3fa0" stroke-width="2" marker-end="url(#aPurple)"/>
+  <text x="882" y="66" font-size="11" fill="#555">default route (defaultgw enable)</text>
+  <text x="806" y="488" font-size="11" fill="#6b3fa0">defaultgw disable, routes to:</text>
+
+  <!-- config list -->
+  <g font-size="12">
+    <rect x="610" y="140" width="250" height="248" rx="6" fill="#ffffff" stroke="#ccc"/>
+    <text x="624" y="162" font-size="13" font-weight="bold" fill="#333">Configuration</text>
+    <rect x="624" y="176" width="12" height="12" fill="#fff" stroke="#6b3fa0" stroke-width="2"/>
+    <text x="644" y="187" fill="#333">probe-response, HTTP port 8008</text>
+    <rect x="624" y="202" width="12" height="12" fill="#fff" stroke="#6b3fa0" stroke-width="2"/>
+    <text x="644" y="213" fill="#333">spoke_cidrs → geneve-azN</text>
+    <text x="644" y="228" fill="#777" font-size="11">distance 5, priority 100</text>
+    <rect x="624" y="242" width="12" height="12" fill="#fff" stroke="#6b3fa0" stroke-width="2"/>
+    <text x="644" y="253" fill="#333">policy route: in geneve-azN</text>
+    <text x="644" y="268" fill="#777" font-size="11">→ out the same tunnel</text>
+    <rect x="624" y="282" width="12" height="12" fill="#fff" stroke="#6b3fa0" stroke-width="2"/>
+    <text x="644" y="293" fill="#333">fortiguard auto-firmware-upgrade off</text>
+    <rect x="624" y="310" width="12" height="12" fill="#fff" stroke="#2e8540" stroke-width="2"/>
+    <text x="644" y="321" fill="#333">private_to_internet</text>
+    <text x="644" y="336" fill="#777" font-size="11">private-zone → port2, NAT on</text>
+    <rect x="624" y="350" width="12" height="12" fill="#fff" stroke="#2e8540" stroke-width="2"/>
+    <text x="644" y="361" fill="#333">private_to_private</text>
+    <text x="644" y="376" fill="#777" font-size="11">private-zone → private-zone</text>
+  </g>
+
+  <!-- legend -->
+  <rect x="910" y="150" width="240" height="120" rx="6" fill="#fafafa" stroke="#ccc"/>
+  <text x="926" y="174" font-size="13" font-weight="bold" fill="#333">Installed by</text>
+  <rect x="926" y="190" width="14" height="14" fill="#fff" stroke="#6b3fa0" stroke-width="2"/>
+  <text x="948" y="202" font-size="12" fill="#333">CLI template</text>
+  <text x="948" y="218" font-size="11" fill="#777">fmg-cli-template.txt</text>
+  <rect x="926" y="232" width="14" height="14" fill="#fff" stroke="#2e8540" stroke-width="2"/>
+  <text x="948" y="244" font-size="12" fill="#333">Policy package</text>
+  <text x="948" y="260" font-size="11" fill="#777">fmg-policy-reference.txt</text>
+
+  <rect x="910" y="290" width="240" height="98" rx="6" fill="#fafafa" stroke="#ccc"/>
+  <text x="926" y="314" font-size="13" font-weight="bold" fill="#333">Ports by firewall_policy_mode</text>
+  <text x="926" y="336" font-size="12" fill="#333">2-arm: port1 GENEVE, port2</text>
+  <text x="926" y="352" font-size="12" fill="#333">internet, port3 management</text>
+  <text x="926" y="374" font-size="12" fill="#333">1-arm: port1 both, port2 mgmt</text>
+</svg>
