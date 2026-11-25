@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 600" width="1250" height="600" font-family="Helvetica, Arial, sans-serif">
+<title>UMS scale-out: how a new FortiGate joins the group</title>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker></defs>
+<rect width="1250" height="600" fill="#fff"/>
+<rect x="5" y="16" width="190" height="46" rx="6" fill="#555"/>
+<text x="100" y="45" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">FortiManager admin</text>
+<line x1="100" y1="62" x2="100" y2="580" stroke="#555" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.6"/>
+<rect x="215" y="16" width="190" height="46" rx="6" fill="#6b3fa0"/>
+<text x="310" y="45" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">FortiManager</text>
+<line x1="310" y1="62" x2="310" y2="580" stroke="#6b3fa0" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.6"/>
+<rect x="425" y="16" width="190" height="46" rx="6" fill="#e08a2c"/>
+<text x="520" y="45" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">AWS Auto Scaling group</text>
+<line x1="520" y1="62" x2="520" y2="580" stroke="#e08a2c" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.6"/>
+<rect x="635" y="16" width="190" height="46" rx="6" fill="#da291c"/>
+<text x="730" y="45" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">New FortiGate</text>
+<line x1="730" y1="62" x2="730" y2="580" stroke="#da291c" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.6"/>
+<rect x="845" y="16" width="190" height="46" rx="6" fill="#2e8540"/>
+<text x="940" y="45" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">FortiFlex</text>
+<line x1="940" y1="62" x2="940" y2="580" stroke="#2e8540" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.6"/>
+<rect x="1055" y="16" width="190" height="46" rx="6" fill="#e08a2c"/>
+<text x="1150" y="45" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">Gateway Load Balancer</text>
+<line x1="1150" y1="62" x2="1150" y2="580" stroke="#e08a2c" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.6"/>
+<line x1="104" y1="110" x2="306" y2="110" stroke="#333" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="205.0" y="102" text-anchor="middle" font-size="13" fill="#333">Set Auto-Scale Instance Count</text>
+<circle cx="82" cy="110" r="12" fill="#333"/><text x="82" y="115" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">1</text>
+<line x1="314" y1="164" x2="516" y2="164" stroke="#333" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="415.0" y="156" text-anchor="middle" font-size="13" fill="#333">SDN connector: set counts</text>
+<circle cx="292" cy="164" r="12" fill="#333"/><text x="292" y="169" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">2</text>
+<line x1="524" y1="218" x2="726" y2="218" stroke="#333" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="625.0" y="210" text-anchor="middle" font-size="13" fill="#333">Launch with bootstrap</text>
+<circle cx="502" cy="218" r="12" fill="#333"/><text x="502" y="223" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">3</text>
+<line x1="726" y1="272" x2="314" y2="272" stroke="#333" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="520.0" y="264" text-anchor="middle" font-size="13" fill="#333">register-device-by-ip + API key (FGFM, TCP 541)</text>
+<circle cx="748" cy="272" r="12" fill="#333"/><text x="748" y="277" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">4</text>
+<path d="M310,318 h70 v26 h-66" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="390" y="336" font-size="13" fill="#333">Auto-onboarding rule: ADOM, device group</text>
+<circle cx="292" cy="326" r="12" fill="#333"/><text x="292" y="331" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">5</text>
+<line x1="314" y1="380" x2="936" y2="380" stroke="#333" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="625.0" y="372" text-anchor="middle" font-size="13" fill="#333">FortiFlex connector: entitlement and token</text>
+<circle cx="292" cy="380" r="12" fill="#333"/><text x="292" y="385" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">6</text>
+<line x1="314" y1="434" x2="726" y2="434" stroke="#333" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="520.0" y="426" text-anchor="middle" font-size="13" fill="#333">Install FortiFlex license (FortiGate reboots)</text>
+<circle cx="292" cy="434" r="12" fill="#333"/><text x="292" y="439" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">7</text>
+<line x1="314" y1="488" x2="726" y2="488" stroke="#333" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="520.0" y="480" text-anchor="middle" font-size="13" fill="#333">Install CLI template and policy package</text>
+<circle cx="292" cy="488" r="12" fill="#333"/><text x="292" y="493" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">8</text>
+<line x1="1146" y1="542" x2="734" y2="542" stroke="#333" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="940.0" y="534" text-anchor="middle" font-size="13" fill="#333">Health check on port 8008 passes: traffic starts</text>
+<circle cx="1168" cy="542" r="12" fill="#333"/><text x="1168" y="547" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">9</text>
+</svg>

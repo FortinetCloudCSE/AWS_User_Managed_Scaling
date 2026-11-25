@@ -8,6 +8,9 @@ FortiManager configures every member of the UMS group with the same CLI template
 
 ## The CLI template
 
+![What FortiManager installs on each FortiGate: GENEVE tunnels per AZ in private-zone, routes, probe-response, and the two firewall policies](fortigate-ums-config.svg)
+
+
 `fortimanager/fmg-cli-template.txt` contains:
 
 | Section | Content |

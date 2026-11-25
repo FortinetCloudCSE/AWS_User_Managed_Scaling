@@ -6,6 +6,8 @@ weight: 60
 
 In UMS, the FortiManager administrator sets the instance count. FortiManager's AWS SDN connector writes it to the Auto Scaling group (`<asg_module_prefix>-fgt_ums_asg`); AWS launches or terminates instances; FortiManager onboards, licenses and configures the new ones.
 
+![Scale out and scale in: set the count in FortiManager, AWS adds or removes FortiGates, FortiManager onboards new ones, and removed ones need a manual clean-up](ums-scaling.svg)
+
 ## Scale out
 
 Prerequisite: the first FortiGate of the group is authorized in FortiManager, and the CLI template and policy package are linked to the auto-onboarding rule ([Apply Configuration](../5_deployment/5_3_apply_configuration/)).

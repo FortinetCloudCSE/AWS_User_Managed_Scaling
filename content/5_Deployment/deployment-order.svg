@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" font-family="Helvetica, Arial, sans-serif">
+<title>Deployment order</title>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker></defs>
+<rect width="1200" height="320" fill="#fff"/>
+<text x="600.0" y="34" text-anchor="middle" font-size="18" font-weight="bold" fill="#333">Deployment order</text>
+<rect x="10.0" y="60" width="262" height="190" rx="8" fill="#fff" stroke="#e08a2c" stroke-width="2"/>
+<rect x="10.0" y="60" width="262" height="46" rx="8" fill="#e08a2c"/><rect x="10.0" y="90" width="262" height="16" fill="#e08a2c"/>
+<circle cx="34.0" cy="83" r="13" fill="#fff"/><text x="34.0" y="88" text-anchor="middle" font-size="14" font-weight="bold" fill="#e08a2c">1</text>
+<text x="56.0" y="89" font-size="15" font-weight="bold" fill="#fff">existing_vpc_resources</text>
+<text x="26.0" y="130" font-size="12" font-style="italic" fill="#777">Terraform</text>
+<text x="26.0" y="154" font-size="13" fill="#333">Inspection VPC, TGW, spokes</text>
+<text x="26.0" y="174" font-size="13" fill="#333">Distributed egress VPCs</text>
+<text x="26.0" y="194" font-size="13" fill="#333">Management VPC + FortiManager</text>
+<text x="26.0" y="214" font-size="13" fill="#333">Outputs: fortimanager_public_ip</text>
+<line x1="276.0" y1="155.0" x2="312.0" y2="155.0" stroke="#555" stroke-width="2.5" marker-end="url(#a)"/>
+<rect x="316.0" y="60" width="262" height="190" rx="8" fill="#fff" stroke="#6b3fa0" stroke-width="2"/>
+<rect x="316.0" y="60" width="262" height="46" rx="8" fill="#6b3fa0"/><rect x="316.0" y="90" width="262" height="16" fill="#6b3fa0"/>
+<circle cx="340.0" cy="83" r="13" fill="#fff"/><text x="340.0" y="88" text-anchor="middle" font-size="14" font-weight="bold" fill="#6b3fa0">2</text>
+<text x="362.0" y="89" font-size="15" font-weight="bold" fill="#fff">FortiFlex + FortiManager</text>
+<text x="332.0" y="130" font-size="12" font-style="italic" fill="#777">FortiCloud and FortiManager GUI</text>
+<text x="332.0" y="154" font-size="13" fill="#333">FortiFlex configuration, API user</text>
+<text x="332.0" y="174" font-size="13" fill="#333">REST API admin (API key)</text>
+<text x="332.0" y="194" font-size="13" fill="#333">AWS SDN + UMS connectors</text>
+<text x="332.0" y="214" font-size="13" fill="#333">FortiFlex connector, onboarding rule</text>
+<line x1="582.0" y1="155.0" x2="618.0" y2="155.0" stroke="#555" stroke-width="2.5" marker-end="url(#a)"/>
+<rect x="622.0" y="60" width="262" height="190" rx="8" fill="#fff" stroke="#da291c" stroke-width="2"/>
+<rect x="622.0" y="60" width="262" height="46" rx="8" fill="#da291c"/><rect x="622.0" y="90" width="262" height="16" fill="#da291c"/>
+<circle cx="646.0" cy="83" r="13" fill="#fff"/><text x="646.0" y="88" text-anchor="middle" font-size="14" font-weight="bold" fill="#da291c">3</text>
+<text x="668.0" y="89" font-size="15" font-weight="bold" fill="#fff">ums_template</text>
+<text x="638.0" y="130" font-size="12" font-style="italic" fill="#777">Terraform</text>
+<text x="638.0" y="154" font-size="13" fill="#333">GWLB, GWLB endpoints, routes</text>
+<text x="638.0" y="174" font-size="13" fill="#333">Auto Scaling group: FortiGates boot</text>
+<text x="638.0" y="194" font-size="13" fill="#333">and register to FortiManager</text>
+<text x="638.0" y="214" font-size="13" fill="#333">Writes fortimanager/*.txt</text>
+<line x1="888.0" y1="155.0" x2="924.0" y2="155.0" stroke="#555" stroke-width="2.5" marker-end="url(#a)"/>
+<rect x="928.0" y="60" width="262" height="190" rx="8" fill="#fff" stroke="#2e8540" stroke-width="2"/>
+<rect x="928.0" y="60" width="262" height="46" rx="8" fill="#2e8540"/><rect x="928.0" y="90" width="262" height="16" fill="#2e8540"/>
+<circle cx="952.0" cy="83" r="13" fill="#fff"/><text x="952.0" y="88" text-anchor="middle" font-size="14" font-weight="bold" fill="#2e8540">4</text>
+<text x="974.0" y="89" font-size="15" font-weight="bold" fill="#fff">Apply configuration</text>
+<text x="944.0" y="130" font-size="12" font-style="italic" fill="#777">FortiManager GUI</text>
+<text x="944.0" y="154" font-size="13" fill="#333">Import fmg-cli-template.txt</text>
+<text x="944.0" y="174" font-size="13" fill="#333">Policy package with 2 policies</text>
+<text x="944.0" y="194" font-size="13" fill="#333">Link both to the onboarding rule</text>
+<text x="944.0" y="214" font-size="13" fill="#333">Install on the members</text>
+<text x="600.0" y="290" text-anchor="middle" font-size="13" fill="#a51d12">Step 2 comes before step 3: each FortiGate registers to FortiManager once, at first boot.</text>
+</svg>
