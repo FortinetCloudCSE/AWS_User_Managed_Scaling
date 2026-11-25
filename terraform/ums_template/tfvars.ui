@@ -1,0 +1,470 @@
+#====================================================================================================
+# REGION AND AVAILABILITY ZONES
+#====================================================================================================
+# @ui-group: Region and Availability Zones
+# @ui-order: 1
+# @ui-description: AWS region and availability zone selection for FortiGate deployment
+
+# @ui-type: select
+# @ui-source: aws-regions
+# @ui-label: AWS Region
+# @ui-description: AWS region where all resources will be deployed
+# @ui-required: true
+# @ui-width: full
+# @ui-default: us-west-2
+aws_region          = "us-west-2"
+
+# @ui-type: select
+# @ui-source: aws-availability-zones
+# @ui-depends-on: aws_region
+# @ui-label: Availability Zone 1
+# @ui-description: First AZ for multi-AZ deployment (specify as single letter: a, b, c, etc.)
+# @ui-required: true
+# @ui-width: half
+# @ui-default: a
+availability_zone_1 = "a"
+
+# @ui-type: select
+# @ui-source: aws-availability-zones
+# @ui-depends-on: aws_region
+# @ui-label: Availability Zone 2
+# @ui-description: Second AZ for multi-AZ deployment (must differ from AZ 1)
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: different-from:availability_zone_1
+# @ui-default: c
+availability_zone_2 = "c"
+
+#====================================================================================================
+# RESOURCE IDENTIFICATION
+#====================================================================================================
+# @ui-group: Resource Identification
+# @ui-order: 2
+# @ui-description: Customer prefix and environment for resource naming and tagging. CRITICAL: These values MUST MATCH between existing_vpc_resources and ums_template for resource discovery.
+
+# @ui-type: text
+# @ui-label: Customer Prefix
+# @ui-description: Customer prefix for resource naming (e.g., company/project name)
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: min-length:2,max-length:20
+# @ui-default: acme
+# @ui-help: Format: <cp>-<env>-<resource_name> (e.g., "acme-test-inspection-vpc")
+cp  = "acme"
+
+# @ui-type: text
+# @ui-label: Environment
+# @ui-description: Environment name (prod, test, dev, staging, etc.)
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: min-length:2,max-length:20
+# @ui-default: test
+env = "test"
+
+#====================================================================================================
+# FORTIGATE INSTANCE CONFIGURATION
+#====================================================================================================
+# @ui-group: FortiGate Instance Configuration
+# @ui-order: 3
+# @ui-description: FortiGate instance type, version, credentials, and interface architecture
+
+# @ui-type: select
+# @ui-source: aws-keypairs
+# @ui-depends-on: aws_region
+# @ui-label: FortiGate EC2 Key Pair
+# @ui-description: AWS EC2 keypair for SSH access to FortiGate instances (must already exist in target region)
+# @ui-required: true
+# @ui-width: half
+# @ui-help: Use 'aws ec2 describe-key-pairs' to list available keypairs
+keypair = ""
+
+# @ui-type: text
+# @ui-label: Management Access CIDRs
+# @ui-description: List of CIDRs allowed to access FortiGate management (HTTPS, SSH, SNMP)
+# @ui-required: true
+# @ui-width: full
+# @ui-placeholder: ["1.2.3.4/32", "5.6.7.0/24"]
+# @ui-help: Restricts access to HTTPS (443), SSH (22), SNMP (161/162), FortiManager (541). Find your IP: curl ifconfig.me
+vpc_cidr_sg = []
+
+# @ui-type: password
+# @ui-label: FortiGate Admin Password
+# @ui-description: Password the bootstrap configuration sets for the FortiGate 'admin' user
+# @ui-required: true
+# @ui-width: full
+# @ui-validation: min-length:8
+# @ui-help: Minimum 8 characters. FortiManager can change it later through a system template.
+fortigate_admin_password = ""
+
+# @ui-type: select
+# @ui-source: static
+# @ui-options: c6i.xlarge|c6i.xlarge (4 vCPU - Small/Medium),c6i.2xlarge|c6i.2xlarge (8 vCPU - Medium),c7gn.large|c7gn.large (2 vCPU ARM - Minimal),c7gn.xlarge|c7gn.xlarge (4 vCPU ARM),c7gn.2xlarge|c7gn.2xlarge (8 vCPU ARM),c8gn.xlarge|c8gn.xlarge (4 vCPU ARM - Latest),c8gn.2xlarge|c8gn.2xlarge (8 vCPU ARM - Latest),c8gn.4xlarge|c8gn.4xlarge (16 vCPU ARM - High Performance)
+# @ui-label: FortiGate Instance Type
+# @ui-description: EC2 instance type for FortiGate (determines CPU, memory, network performance)
+# @ui-required: true
+# @ui-width: half
+# @ui-default: c6i.xlarge
+# @ui-help: c6i: Intel x86, c7gn/c8gn: ARM Graviton. The FortiFlex configuration must have the same number of CPUs.
+fgt_instance_type = "c6i.xlarge"
+
+# @ui-type: text
+# @ui-label: FortiOS Version
+# @ui-description: FortiOS version to deploy, as X.Y.Z (UMS requires 7.6.8+ or 8.0.2+)
+# @ui-required: true
+# @ui-width: half
+# @ui-default: 7.6.8
+# @ui-validation: pattern:^[0-9]+\.[0-9]+\.[0-9]+$
+# @ui-help: Must not be later than the FortiManager version
+fortios_version = "7.6.8"
+
+# @ui-type: number
+# @ui-label: FortiGate GUI Port
+# @ui-description: HTTPS port for web management interface
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: min:1,max:65535
+# @ui-default: 443
+# @ui-help: Default: 443 (standard HTTPS), Alternative: 8443
+fortigate_gui_port = 443
+
+# @ui-type: select
+# @ui-source: static
+# @ui-options: 1-arm|1-Arm (Single Interface - Hairpin),2-arm|2-Arm (Dual Interface - Traditional)
+# @ui-label: Firewall Policy Mode
+# @ui-description: FortiGate interface architecture for traffic inspection
+# @ui-required: true
+# @ui-width: half
+# @ui-default: 1-arm
+# @ui-help: 1-arm: Hairpin traffic pattern (simpler). 2-arm: Separate trusted/untrusted interfaces (traditional firewall model).
+firewall_policy_mode = "1-arm"
+
+# @ui-type: select
+# @ui-source: static
+# @ui-options: nat_gw|NAT Gateway (Centralized - Predictable IP),eip|Elastic IP (Per Instance - No NAT Gateway cost)
+# @ui-label: Internet Egress Mode
+# @ui-description: How FortiGate instances access the internet
+# @ui-required: true
+# @ui-width: full
+# @ui-default: nat_gw
+# @ui-help: NAT Gateway: Predictable source IP, additional cost. EIP: Distributed egress, no NAT Gateway cost. Must match the inspection VPC: NAT Gateway when it was built with NAT gateway subnets, EIP when it was not; terraform plan stops if they disagree.
+access_internet_mode = "nat_gw"
+
+#====================================================================================================
+# MANAGEMENT OPTIONS
+#====================================================================================================
+# @ui-group: Management Options
+# @ui-order: 4
+# @ui-description: FortiGate management interface and VPC integration options
+
+# @ui-type: checkbox
+# @ui-label: Enable Dedicated Management VPC
+# @ui-description: Connect FortiGate management interfaces to separate management VPC (created by existing_vpc_resources)
+# @ui-width: full
+# @ui-default: false
+# @ui-exclusive-with: enable_dedicated_management_eni
+# @ui-help: Mutually exclusive with Enable Dedicated Management ENI. Default derived from your existing_vpc_resources selection.
+enable_dedicated_management_vpc = false
+
+# @ui-type: checkbox
+# @ui-label: Enable Dedicated Management ENI
+# @ui-description: Dedicate port2 as management-only interface using subnets in the inspection VPC
+# @ui-width: full
+# @ui-default: false
+# @ui-exclusive-with: enable_dedicated_management_vpc
+# @ui-help: Mutually exclusive with Enable Dedicated Management VPC. Default derived from your existing_vpc_resources selection.
+enable_dedicated_management_eni = false
+
+
+#====================================================================================================
+# TRANSIT GATEWAY INTEGRATION
+#====================================================================================================
+# @ui-group: Transit Gateway Integration
+# @ui-order: 5
+# @ui-description: Attach inspection VPC to Transit Gateway for centralized routing
+
+# @ui-type: checkbox
+# @ui-label: Enable TGW Attachment
+# @ui-description: Attach inspection VPC to existing Transit Gateway
+# @ui-width: full
+# @ui-default: true
+# @ui-help: Set to true for centralized egress architectures. Set to false for distributed inspection.
+enable_tgw_attachment = true
+
+# @ui-type: text
+# @ui-label: Transit Gateway Name
+# @ui-description: Name tag of the existing Transit Gateway to attach to
+# @ui-required: false
+# @ui-width: half
+# @ui-placeholder: acme-test-tgw
+# @ui-show-if: enable_tgw_attachment == true
+# @ui-help: IMPORTANT: Must match attach_to_tgw_name in existing_vpc_resources. TGW must be in Available state.
+attach_to_tgw_name = "acme-test-tgw"
+
+# @ui-type: checkbox
+# @ui-label: Create TGW Routes for Existing Resources
+# @ui-description: Populate TGW route tables to route spoke traffic through inspection VPC
+# @ui-width: full
+# @ui-show-if: enable_tgw_attachment == true
+# @ui-default: false
+# @ui-help: Set to true ONLY if you deployed existing_vpc_resources. Set to false for production TGW integration.
+create_tgw_routes_for_existing = false
+
+#====================================================================================================
+# GATEWAY LOAD BALANCER CONFIGURATION
+#====================================================================================================
+# @ui-group: GWLB Configuration
+# @ui-order: 6
+# @ui-description: Gateway Load Balancer settings and route table configuration
+
+# @ui-type: checkbox
+# @ui-label: Allow Cross-Zone Load Balancing
+# @ui-description: GWLB can send traffic to FortiGates in any AZ
+# @ui-width: full
+# @ui-default: true
+# @ui-help: Recommended for production (maximizes availability). Set to false to avoid cross-AZ data transfer charges ($0.01/GB).
+allow_cross_zone_load_balancing = true
+
+# @ui-type: text
+# @ui-label: GWLB Endpoint Name AZ1
+# @ui-description: Name for GWLB endpoint in first availability zone
+# @ui-required: true
+# @ui-width: half
+# @ui-default: asg-gwlbe_az1
+# @ui-help: Used for route table configuration to direct traffic through endpoints
+endpoint_name_az1 = "asg-gwlbe_az1"
+
+# @ui-type: text
+# @ui-label: GWLB Endpoint Name AZ2
+# @ui-description: Name for GWLB endpoint in second availability zone
+# @ui-required: true
+# @ui-width: half
+# @ui-default: asg-gwlbe_az2
+endpoint_name_az2 = "asg-gwlbe_az2"
+
+# @ui-type: checkbox
+# @ui-label: Modify Existing Route Tables
+# @ui-description: Add routes in inspection VPC private subnets pointing to GWLB endpoints
+# @ui-width: full
+# @ui-default: true
+# @ui-help: WARNING: When true, replaces existing default routes in private subnets. Required for traffic inspection to work.
+modify_existing_route_tables = true
+
+# @ui-type: number
+# @ui-label: GWLB Health Check Port
+# @ui-description: Port used by GWLB to health check FortiGate instances
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: min:1,max:65535
+# @ui-default: 8008
+# @ui-help: Uses FortiGate probe-response (port 8008). Secondary instances won't pass until config sync from primary is complete.
+gwlb_health_check_port = 8008
+
+# @ui-type: number
+# @ui-label: GWLB Health Check Interval (seconds)
+# @ui-description: Seconds between health checks sent to each FortiGate instance
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: min:5,max:300
+# @ui-default: 60
+# @ui-help: interval x healthy_threshold = minimum sync gate time (e.g. 60s x 5 = 5 min)
+gwlb_health_check_interval = 60
+
+# @ui-type: number
+# @ui-label: GWLB Healthy Threshold
+# @ui-description: Consecutive health check successes required before a target receives traffic
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: min:2,max:10
+# @ui-default: 5
+# @ui-help: Higher values enforce a longer minimum wait for config sync before traffic is sent to a new instance.
+gwlb_healthy_threshold = 5
+
+# @ui-type: number
+# @ui-label: ASG Health Check Grace Period (seconds)
+# @ui-description: Seconds after instance launch before ASG health checking begins
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: min:0,max:3600
+# @ui-default: 1200
+# @ui-help: Must exceed boot + FortiManager onboarding (registration, FortiFlex license and reboot, CLI template install) + GWLB healthy threshold.
+asg_health_check_grace_period = 1200
+
+# @ui-type: checkbox
+# @ui-label: Enable Distributed Egress (Test Only)
+# @ui-description: Attach a GWLB Endpoint to each distributed-egress VPC (tag-discovered lab VPCs from existing_vpc_resources), sharing this ASG's GWLB Endpoint Service with the centralized/Inspection VPC path
+# @ui-width: full
+# @ui-default: false
+# @ui-help: Requires the lab distributed VPCs to be built in existing_vpc_resources first (Build Distributed Egress Lab VPCs). Test scaffolding for the dual-egress feature -- not a production pattern.
+enable_distributed_egress = false
+
+# NOTE: distributed_egress_endpoint_subnet_ids (list(string)) is not exposed here. It's an
+# advanced override for attaching a GWLB Endpoint to customer-owned distributed VPCs this
+# template can't discover via Fortinet-Role tags -- a GWLB Endpoint is created in each listed
+# subnet, but unlike tag-discovered subnets, their route tables are never modified. Hand-edit
+# the generated tfvars to add it if needed.
+
+#====================================================================================================
+# NETWORK CIDR CONFIGURATION
+#====================================================================================================
+# @ui-group: Network CIDR Configuration
+# @ui-order: 7
+# @ui-description: VPC CIDR blocks for inspection, management, and spoke VPCs
+
+# @ui-type: text
+# @ui-label: Inspection VPC CIDR
+# @ui-description: CIDR for the inspection VPC where FortiGate autoscale group and GWLB are deployed
+# @ui-required: true
+# @ui-width: full
+# @ui-validation: cidr
+# @ui-default: 10.0.0.0/16
+# @ui-help: Must not overlap with management VPC or spoke VPCs
+vpc_cidr_inspection = "10.0.0.0/16"
+
+# @ui-type: text
+# @ui-label: Management VPC CIDR
+# @ui-description: CIDR for the management VPC (must match existing_vpc_resources if deployed)
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: cidr,not-overlap
+# @ui-default: 10.3.0.0/16
+vpc_cidr_management = "10.3.0.0/16"
+
+# @ui-type: text
+# @ui-label: East Spoke VPC CIDR
+# @ui-description: CIDR for the east spoke VPC
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: cidr
+# @ui-default: 192.168.0.0/24
+vpc_cidr_east  = "192.168.0.0/24"
+
+# @ui-type: text
+# @ui-label: West Spoke VPC CIDR
+# @ui-description: CIDR for the west spoke VPC
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: cidr
+# @ui-default: 192.168.1.0/24
+vpc_cidr_west  = "192.168.1.0/24"
+
+# NOTE: spoke_cidrs (list(string)) is not exposed here. It's an optional
+# advanced override for ums_template's FortiGate east-west inspection
+# routes -- defaults to [vpc_cidr_east, vpc_cidr_west] if left unset, which
+# covers the fields above. Only needed if the real spoke list differs from
+# just those two; hand-edit the generated tfvars to add it in that case.
+
+# @ui-type: number
+# @ui-label: Subnet Bits
+# @ui-description: Number of bits added to VPC CIDR prefix for subnet calculation
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: min:4,max:12
+# @ui-default: 8
+# @ui-help: Example: 10.0.0.0/16 with subnet_bits=8 creates /24 subnets
+subnet_bits = 8
+
+#====================================================================================================
+# UMS GROUP CAPACITY
+#====================================================================================================
+# @ui-group: UMS Group Capacity
+# @ui-order: 8
+# @ui-description: Initial size of the Auto Scaling group. After deployment FortiManager sets the instance count.
+
+# @ui-type: text
+# @ui-label: ASG Module Prefix
+# @ui-description: Prefix for the resources the Fortinet module creates
+# @ui-required: true
+# @ui-width: half
+# @ui-validation: min-length:2,max-length:20
+# @ui-default: asg
+# @ui-help: Results in names like "asg-fgt_ums_asg" and "asg-gwlbe_az1"
+asg_module_prefix = "asg"
+
+# @ui-type: slider
+# @ui-label: Minimum Size
+# @ui-description: Initial minimum size of the Auto Scaling group
+# @ui-required: true
+# @ui-width: third
+# @ui-validation: min:0,max:10
+# @ui-default: 1
+# @ui-help: Before applying again after FortiManager has scaled the group, set to the count FortiManager last set
+asg_min_size = 1
+
+# @ui-type: slider
+# @ui-label: Maximum Size
+# @ui-description: Initial maximum size of the Auto Scaling group
+# @ui-required: true
+# @ui-width: third
+# @ui-validation: min:1,max:10
+# @ui-default: 1
+asg_max_size = 1
+
+# @ui-type: slider
+# @ui-label: Desired Size
+# @ui-description: Initial desired size of the Auto Scaling group
+# @ui-required: true
+# @ui-width: third
+# @ui-validation: min:0,max:10
+# @ui-default: 1
+asg_desired_size = 1
+
+#====================================================================================================
+# FORTIMANAGER (REQUIRED FOR UMS)
+#====================================================================================================
+# @ui-group: FortiManager (UMS)
+# @ui-order: 10
+# @ui-description: FortiManager onboards, licenses (FortiFlex), configures and scales the FortiGates
+
+# @ui-type: text
+# @ui-label: FortiManager IP
+# @ui-description: FortiManager address the FortiGates register to
+# @ui-required: true
+# @ui-width: half
+# @ui-placeholder: 203.0.113.10
+# @ui-help: Elastic IP when the FortiGates reach FortiManager over the internet, private IP when they reach it privately. TCP 541 must be allowed.
+fortimanager_ip = ""
+
+# @ui-type: text
+# @ui-label: FortiManager Serial Number
+# @ui-description: FortiManager serial number
+# @ui-required: true
+# @ui-width: half
+# @ui-placeholder: FMGVM0000000001
+# @ui-help: FortiManager CLI: get system status
+fortimanager_sn = ""
+
+# @ui-type: password
+# @ui-label: FortiManager API Key
+# @ui-description: API key of the REST API administrator used by the auto-onboarding rule
+# @ui-required: true
+# @ui-width: full
+# @ui-help: System Settings > Administrators > Create New > REST API Admin, with Automatic Register enabled
+fortimanager_api_key = ""
+
+# @ui-type: password
+# @ui-label: Auto-Scale PSK Secret
+# @ui-description: Pre-shared secret of config system auto-scale on the UMS group members
+# @ui-required: true
+# @ui-width: half
+ums_autoscale_psksecret = ""
+
+# @ui-type: number
+# @ui-label: Heartbeat Interval (seconds)
+# @ui-description: Seconds between auto-scale heartbeats
+# @ui-required: false
+# @ui-width: half
+# @ui-validation: min:1,max:60
+# @ui-default: 10
+ums_hb_interval = 10
+
+# @ui-hidden: true
+public_subnet_index = 0
+
+# @ui-hidden: true
+gwlbe_subnet_index = 1
+
+# @ui-hidden: true
+private_subnet_index = 2
+
+# @ui-hidden: true
+natgw_subnet_index = 3

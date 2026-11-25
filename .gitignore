@@ -8,3 +8,20 @@ package.json
 /venv
 fortihugorunner
 .claude/settings.local.json
+
+# Terraform
+**/.terraform
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/terraform.tfstate.*.backup
+**/.terraform.tfstate.lock.info
+**/terraform.tfvars
+**/tfplan*
+**/*.lic
+**/*.zip
+**/.idea
+**/__pycache__
+**/*.pyc
+# Rendered FortiManager templates (contain deployment-specific addresses)
+terraform/ums_template/fortimanager/

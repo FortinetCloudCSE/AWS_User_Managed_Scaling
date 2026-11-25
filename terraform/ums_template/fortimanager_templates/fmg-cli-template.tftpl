@@ -1,0 +1,117 @@
+config system probe-response
+    set mode http-probe
+    set port ${health_check_port}
+    set http-probe-value "OK"
+end
+config system interface
+    edit "${geneve_port}"
+        set allowaccess ping https probe-response fgfm
+%{ if public_port != geneve_port ~}
+        set defaultgw disable
+    next
+    edit "${public_port}"
+        set allowaccess ping https fgfm
+%{ endif ~}
+        set defaultgw enable
+    next
+%{ if mgmt_port != "" ~}
+    edit "${mgmt_port}"
+        set allowaccess ping https ssh snmp fgfm
+        set defaultgw disable
+    next
+%{ endif ~}
+end
+config system geneve
+%{ for i, az in az_list ~}
+    edit "geneve-${az}"
+        set interface "${geneve_port}"
+        set type ppp
+        set remote-ip ${gwlb_ips[i]}
+    next
+%{ endfor ~}
+end
+config system zone
+    edit "private-zone"
+        set interface ${join(" ", [for az in az_list : "\"geneve-${az}\""])}
+    next
+end
+config router static
+%{ for i, az in az_list ~}
+    edit 0
+        set dst ${gwlb_ips[i]} 255.255.255.255
+        set device "${geneve_port}"
+        set dynamic-gateway enable
+    next
+%{ endfor ~}
+%{ for cidr in mgmt_route_cidrs ~}
+    edit 0
+        set dst ${split("/", cidr)[0]} ${cidrnetmask(cidr)}
+        set device "${mgmt_port}"
+        set dynamic-gateway enable
+    next
+%{ endfor ~}
+%{ for az in az_list ~}
+%{ for cidr in spoke_cidrs ~}
+    edit 0
+        set dst ${split("/", cidr)[0]} ${cidrnetmask(cidr)}
+        set distance 5
+        set priority 100
+        set device "geneve-${az}"
+    next
+%{ endfor ~}
+%{ endfor ~}
+%{ if enable_distributed_egress ~}
+%{ for az in az_list ~}
+    edit 0
+        set dst 0.0.0.0 0.0.0.0
+        set distance 5
+        set priority 100
+        set device "geneve-${az}"
+    next
+%{ endfor ~}
+%{ endif ~}
+end
+config router policy
+%{ if enable_distributed_egress ~}
+%{ for az in az_list ~}
+    edit 0
+        set input-device "geneve-${az}"
+        set dst ${join(" ", [for cidr in distributed_egress_cidrs : "\"${cidr}\""])}
+        set output-device "geneve-${az}"
+    next
+%{ endfor ~}
+%{ for az in az_list ~}
+    edit 0
+        set input-device "geneve-${az}"
+        set src ${join(" ", [for cidr in distributed_egress_cidrs : "\"${cidr}\""])}
+        set output-device "geneve-${az}"
+    next
+%{ endfor ~}
+%{ for az in az_list ~}
+    edit 0
+        set input-device "geneve-${az}"
+        set src ${join(" ", [for cidr in centralized_spoke_cidrs : "\"${cidr}\""])}
+        set dst ${join(" ", [for cidr in centralized_spoke_cidrs : "\"${cidr}\""])}
+        set output-device "geneve-${az}"
+    next
+%{ endfor ~}
+%{ else ~}
+%{ for az in az_list ~}
+    edit 0
+        set input-device "geneve-${az}"
+        set output-device "geneve-${az}"
+    next
+%{ endfor ~}
+%{ endif ~}
+end
+config system global
+    set gui-auto-upgrade-setup-warning disable
+    set gui-firmware-upgrade-warning disable
+end
+config system fortiguard
+    set auto-firmware-upgrade disable
+%{ if mgmt_port != "" ~}
+    set interface-select-method specify
+    set interface "${mgmt_port}"
+%{ endif ~}
+end
