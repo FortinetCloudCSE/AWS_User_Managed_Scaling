@@ -190,7 +190,7 @@ fortimanager_instance_type = "m5.xlarge"
 
 # FortiManager OS version to deploy
 # Use format "X.Y.Z" for specific version or "X.Y" for latest patch version
-# UMS requires FortiManager 7.6.8 or later on the 7.6 branch, or 8.0.2 or later on the 8.0 branch.
+# UMS requires FortiManager 7.6.4 or later (8.0 included).
 # FortiManager must run the same or a later version than the FortiGates it manages.
 #
 fortimanager_os_version = "7.6.8"

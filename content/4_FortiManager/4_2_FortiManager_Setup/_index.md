@@ -60,6 +60,10 @@ Test the connector: create a dynamic address object that uses it (**Policy & Obj
 3. **OK**.
 4. Edit the connector, enter the FortiFlex **program serial number**, **Apply**, refresh, and select the **configuration** created for the UMS group as the default configuration of the connector.
 
+{{% notice warning %}}
+Create the FortiFlex connector in the ADOM that the auto-onboarding rule (step 6) assigns the FortiGates to. The rule itself is created in the root ADOM, but the FortiFlex connector it uses under **Install License** must be in the FortiGates' target ADOM.
+{{% /notice %}}
+
 ## 6. Create the auto-onboarding rule
 
 The auto-onboarding rule decides what happens to each FortiGate that registers with the API key.
@@ -74,7 +78,7 @@ The auto-onboarding rule decides what happens to each FortiGate that registers w
 4. **Actions**:
    - **ADOM**: root, or the ADOM of the UMS group
    - **Device Group**: the device group of the UMS group (for example `Managed FortiGates`)
-   - **Install License**: **Flex VM** (uses the FortiFlex connector)
+   - **Install License**: **Flex VM**, with the FortiFlex connector of the same ADOM as **ADOM** above (see the note in step 5)
    - **Install Configuration**: **Manual Configuration**, with the template group and policy package of the UMS group (created in [Apply Configuration](../../5_deployment/5_3_apply_configuration/); edit the rule then to select them)
 5. **OK**.
 
@@ -107,4 +111,5 @@ diagnose debug enable
 | The FortiGate never shows in Device Manager | TCP 541 from the FortiGate to `fortimanager_ip` (security groups, routes), `fortimanager_sn`, `fortimanager_api_key` |
 | The FortiGate shows as unauthorized | Auto-onboarding rule: administrator and platform |
 | The UMS group shows no instance counts | AWS SDN connector credentials and permissions |
+| The auto-onboarding rule offers no FortiFlex connector under **Install License** | The FortiFlex connector must be in the ADOM selected under the rule's **Actions** > **ADOM** |
 | HTTPS management conflicts with IPsec over TCP 443 | Add `config system settings` / `set ike-tcp-port 10443` / `end` to a CLI template |

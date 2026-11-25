@@ -35,7 +35,7 @@ Set at least:
 | `cp`, `env` | Naming prefix. Use the same values in `ums_template` |
 | `keypair` | An EC2 key pair in the region |
 | `management_cidr_sg` | Admin source CIDRs for FortiManager, the jump box and FortiAnalyzer |
-| `fortimanager_os_version` | `7.6.8` or later (7.6), or `8.0.2` or later |
+| `fortimanager_os_version` | `7.6.4` or later (8.0 included), and not earlier than `fortios_version` in `ums_template` |
 | `fortimanager_license_file` | Path to the FortiManager BYOL license, or `""` for PAYG |
 | `fortimanager_admin_password` | FortiManager `admin` password |
 | `enable_fortimanager_public_ip` | `true` for the internet reachability model (Elastic IP) |

@@ -45,7 +45,7 @@ cp terraform.tfvars.example terraform.tfvars
 
 | Variable | Description |
 |---|---|
-| `fortios_version` | `X.Y.Z`, 7.6.8 or later (7.6), or 8.0.2 or later. Not later than FortiManager |
+| `fortios_version` | `X.Y.Z`, 7.6.4 or later (8.0 included). Not later than FortiManager |
 | `fgt_instance_type` | Same CPU count as the FortiFlex configuration |
 | `fortigate_admin_password` | `admin` password set by the bootstrap |
 | `keypair` | EC2 key pair |

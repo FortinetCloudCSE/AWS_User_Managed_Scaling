@@ -17,12 +17,12 @@ weight: 30
 
 | Product | Minimum |
 |---|---|
-| FortiOS | 7.6.8 (7.6 branch) or 8.0.2 |
-| FortiManager | 7.6.8 (7.6 branch) or 8.0.2, and the same or a later version than the FortiGates |
+| FortiOS | 7.6.4 (8.0 included) |
+| FortiManager | 7.6.4 (8.0 included), and the same or a later version than the FortiGates |
 | Terraform | 1.5 |
 | Fortinet Terraform module | `fortinetdev/cloud-modules/aws` 1.1.7 (pinned in `ums_template`) |
 
-`ums_template` refuses a `fortios_version` lower than these. Set `fortimanager_os_version` in `existing_vpc_resources` to `7.6.8` or later.
+`ums_template` refuses a `fortios_version` lower than 7.6.4. Set `fortimanager_os_version` in `existing_vpc_resources` to 7.6.4 or later, and to the same or a later version than `fortios_version`.
 
 ## FortiManager requirements
 
