@@ -1,64 +1,84 @@
-# CLAUDE.md — UserRepo
+# CLAUDE.md — AWS_User_Managed_Scaling
 
-> Global preferences (planning workflow, code quality, operations): `~/.claude/CLAUDE.md`
-> Ecosystem: CentralRepo (Hugo container + theme), ctf_api (quiz engine), TEC-analytics (analytics platform), UserRepo (this repo).
+> Global preferences: `~/.claude/CLAUDE.md`
+> Sister repo (reference only, never add UMS material to it): `FortinetCloudCSE/Autoscale-Simplified-Template`, the CloudWatch-driven autoscale version of the same architecture.
 
 ## Project in One Line
 
-The FortinetCloudCSE workshop **template**: the site every new workshop repo is cloned from, the authoring guide team members read, and the first repo a CentralRepo layout/shortcode change is proven against.
+Terraform and a Hugo guide for a **FortiGate User Managed Scaling (UMS)** group on AWS. FortiManager onboards, licenses (FortiFlex), configures and scales the FortiGates. The FortiGates sit behind a Gateway Load Balancer (GENEVE) and handle centralized egress and east-west traffic through a Transit Gateway, plus distributed egress through GWLB endpoints in workload VPCs.
 
-## It is a template — that is the constraint that governs everything
+## Fixed decisions
 
-**Anything committed here is inherited by every new workshop repo.** Before adding a site-wide setting, a content page, or a `scripts/repoConfig.json` key, ask whether a workshop that has never heard of the feature should start life carrying it. If the answer is no, scope it to the page that demonstrates it.
+- **FortiFlex only.** No BYOL license files, no PAYG/on-demand group. FortiManager's FortiFlex connector licenses the FortiGates, so the templates hold no FortiFlex credentials. The module runs with `license_type = "byol"` because FortiFlex uses the BYOL AMI.
+- **FortiManager is required**, and it drives scaling. There are no CloudWatch alarms or scaling policies.
+- **Minimum versions:** FortiOS and FortiManager 7.6.8 (7.6 branch) or 8.0.2. `fortios_version` has a validation for this. FortiManager must run the same or a later version than the FortiGates.
+- **One module call, one Auto Scaling group** (`<asg_module_prefix>-fgt_ums_asg`). There are no blue-green slots and no upgrade toolset; don't add them unless asked.
 
-Worked example: the deployment-path gate's live demo declares its two example paths in `content/02Hugo/6_deployment_paths/index.md` **front matter**, not as a `deploymentPaths` site param. Front matter gates that page alone and leaves when the page is deleted; a site param would have handed every new workshop two paths named *(example)* and a padlock line on every page. Declaring both at once is a hard build error. See the CentralRepo `CLAUDE.md` gate section.
-
-## Stack Quick Reference
-
-| Layer | Tech | Notes |
-|-------|------|-------|
-| Site generator | Hugo, inside `public.ecr.aws/k4n6m5h8/fortinet-hugo:latest` | No local Hugo install path — see Build below |
-| Theme, layouts, config | [CentralRepo](https://github.com/FortinetCloudCSE/CentralRepo) | Mounted at build time; **not** in this repo |
-| Deploy | `.github/workflows/static.yml` → GitHub Pages | Push to `main`, plus `workflow_dispatch` (`runner_type`, `image_variant` prod/dev) |
-| Commit status | `Jenkinsfile` | Sets `ci/jenkins/build-status` only |
-| Scanners | `lacework-code-security-pr.yml`, `codex-advisory-review.yml`, `fdevsec.yaml` | Lacework's two statuses take 3–5 min on every PR |
-
-## Key Files
+## Layout
 
 ```
-content/                  — the authoring guide, one page bundle per task, ordered by `weight`
-layouts/shortcodes/       — repo-local shortcodes only: ContainerFlow, FTNThugoFlow, fortihugorunner
-scripts/repoConfig.json   — the site-chrome knob: title, author, banner, theme variant, shortcuts
-Jenkinsfile               — commit status; its content-check stage is disabled
-repo_upgrade_spec.json / .repo_upgrade_version  — CentralRepo batch-migration bookkeeping
-migration_log*.csv        — stale artifacts, and not even about this repo. Never treat as input.
+terraform/existing_vpc_resources/  — lab: inspection VPC, management VPC + FortiManager, TGW, east/west spokes, distributed egress VPCs
+terraform/ums_template/            — UMS group: fortinetdev/cloud-modules/aws//examples/spk_tgw_gwlb_asg_fgt_igw 1.1.7 with fmg_integration.ums
+  ums_group.tf                     — module call, fmg_integration, dedicated management port
+  fortimanager.tf                  — looks up GWLB ENI IPs, renders fortimanager/fmg-cli-template.txt + fmg-policy-reference.txt
+  fortimanager_templates/*.tftpl   — the CLI template and policy reference sources
+  vpc_inspection.tf, vpc_distributed_egress.tf — Fortinet-Role tag discovery and route changes
+content/                           — Hugo guide, one chapter per directory (_index.md, ordered by weight)
+scripts/repoConfig.json            — site chrome (title, author, theme variant, shortcuts)
 ```
 
-No `hugo.toml`, `config.toml`, `Dockerfile`, `static/` or `docs/` here, on purpose.
+Each template has `terraform.tfvars.example` and `tfvars.ui` (the same variables with `@ui-*` annotations). **Keep all three in sync:** `variables.tf`, `terraform.tfvars.example`, `tfvars.ui`. Every uncommented key in the two tfvars files must be a declared variable.
 
-## Build and Run
+## How UMS works here (the non-obvious part)
+
+- With `fmg_integration.ums` set, module 1.1.7 forces `fgt_lic_mgmt = "fmg"`. Its Lambda then **skips `gen_config_content` entirely**: no GENEVE tunnels, no `/32` routes to the GWLB, no probe-response, no auto-scale role, no `user_conf_content`. The Lambda only attaches the ENIs and tracks the instances in DynamoDB. FortiManager installs everything else, which is why `ums_template` renders the CLI template with this deployment's GWLB addresses. (Source: `modules/fortigate/fgt_asg/fgt-asg-lambda.py` `do_launch`, under `.terraform/modules/` after `terraform init`.)
+- The bootstrap (`modules/fortigate/fgt_asg/fgt-userdata.tftpl`) writes `central-management`, `auto-scale` with `set cloud-mode ums` and `callback-url`, and runs `execute central-mgmt register-device-by-ip <fortimanager_ip> <fortimanager_api_key>` **once, at first boot**. FortiManager must be configured and reachable on TCP 541 before `ums_template` launches the FortiGates.
+- The module fixes the ASG health check type to ELB. A FortiGate passes the GWLB health check only after FortiManager has installed probe-response, so `asg_health_check_grace_period` defaults to 1200.
+- Every FortiGate gets one GENEVE tunnel per AZ (`geneve-az1`...), so a single CLI template fits the whole group.
+- The dedicated management port has no VRF: `vrf-select` in the bootstrap would deadlock, because the port isn't in the VRF at boot. The CLI template gives the port `defaultgw disable` plus routes to `vpc_cidr_management` and to the non-`0.0.0.0/0` entries of `vpc_cidr_sg`.
+- FortiManager reachability defaults to its Elastic IP, with `fgfm_additional_source_cidrs = ["0.0.0.0/0"]` in the lab. The bootstrap can't add routes for a private path.
+- After FortiManager changes the instance count, a `terraform apply` with the old `asg_min_size`/`asg_max_size`/`asg_desired_size` sets the Auto Scaling group back to them. The docs tell users to copy the current counts into tfvars first.
+
+## Build and check
 
 ```bash
-# Reproduce the CI build exactly
-docker run --rm -v "$PWD:/home/UserRepo" public.ecr.aws/k4n6m5h8/fortinet-hugo:latest build
+# Terraform (no AWS calls)
+cd terraform/ums_template && terraform init -backend=false && terraform validate
+cd terraform/existing_vpc_resources && terraform init -backend=false && terraform validate
+terraform fmt -recursive terraform
 
-# Live preview
-fortihugorunner launch-server --docker-image fortinet-hugo:latest \
-  --host-port 1313 --container-port 1313 --watch-dir .
+# Render the CLI template with sample values
+echo 'templatefile("fortimanager_templates/fmg-cli-template.tftpl", {az_list=["az1","az2"], gwlb_ips=["10.0.2.10","10.0.3.20"], geneve_port="port1", public_port="port2", mgmt_port="port3", mgmt_route_cidrs=["10.3.0.0/16"], health_check_port=8008, spoke_cidrs=["192.168.0.0/24"], centralized_spoke_cidrs=["192.168.0.0/24"], distributed_egress_cidrs=[], enable_distributed_egress=false})' | terraform console
+
+# Hugo site, the same way CI builds it
+docker run --rm -v "$PWD:/home/UserRepo" public.ecr.aws/k4n6m5h8/fortinet-hugo:latest build
 ```
 
-There is no test suite; content is validated by rendering. `npm install && hugo serve` does **not** work — Hugo's config lives in CentralRepo, and `package.json`'s `hugo` script references a `config.toml` and `docs/` that no longer exist.
+There is no test suite and nothing has a plan run against AWS in CI. `npm install && hugo serve` does **not** work: Hugo's config lives in CentralRepo, and the `hugo` script in `package.json` references a `config.toml` and `docs/` that don't exist.
+
+## Writing rules
+
+- **Docs describe how it works and how to run it.** No history, no "previously" or "used to" wording, and no references to the autoscale template's past behavior.
+- **Use exact variable, output and resource names** (`fortimanager_api_key`, not "the API key variable").
+- Use the `{{% notice info|note|warning %}}` shortcodes. Don't use mermaid: the theme build doesn't load the mermaid library, so a mermaid block renders as raw text. Use a table or a numbered list instead.
+- Mark anything not tested on a live FortiManager/FortiGate as unverified, rather than stating it as fact.
+
+## Working rules
+
+- Commit or push only when asked. Work on a `dev/*` branch and open a PR into `main`.
+- Never log in to the user's FortiGates or FortiManager with passwords.
+- Never commit `terraform.tfvars`, state, `*.lic`, `.terraform/`, or `terraform/ums_template/fortimanager/` (the rendered files contain deployment addresses). `.gitignore` covers all of these.
 
 ## Gotchas
 
-- **`docs/` is machine-owned — never put anything there.** `.gitignore` excludes it, *and* `CentralRepo/scripts/batch_repo_update.py` hardcodes `FOLDERS_TO_DELETE = ["docs"]` with `BRANCH = "main"`, deleting every blob under it via the GitHub tree API and pushing straight to `main`. That script does not read `repo_upgrade_spec.json`, so the spec and the constant can silently drift; the constant is what runs.
-- **`.github/workflows/static.yml` is template-managed.** `batch_repo_update.py` overwrites it from the operator's CentralRepo checkout — hand-edits are lost. The same run deletes `layouts/shortcodes/FTNThugoFlow.html`, `docker-compose.yml`, `hugo.toml`, `config.toml` and `scripts/docker_*.sh`.
-- **`package.json` and `package-lock.json` are listed in `.gitignore` but tracked** (they predate the entries). An ignore rule here is not evidence a file is untracked.
-- **This repo forbids both squash and merge commits.** `gh-merge-verify <pr> --repo FortinetCloudCSE/UserRepo --method rebase` is the only strategy that works.
-- **A brand-new branch with a PR opened immediately after its first push never gets a `ci/jenkins/build-status` check — it blocks merge forever, not just until CI runs.** Jenkins's webhook here only sends `push` events (no `pull_request`), and its multibranch job skips branches that already have an open PR — so nothing ever triggers a build for that SHA. `mergeStateStatus: BLOCKED` with an empty `reviewDecision` and no pending checks is this, not a review requirement (branch protection here requires 0 approvals). Confirmed 2026-08-31, PR #82. Not fixed at the infra level — see memory `gotcha_jenkins_webhook_push_only_pr_gap.md` for the workaround (temporarily drop the required check from branch protection, merge, restore it — needs admin + explicit sign-off, since it's a shared-repo settings change).
-- **Change site chrome in `scripts/repoConfig.json`**, never in content — there is no `hugo.toml` to edit.
-- **Repo-local `layouts/` wins over the container's** via `local_copy.sh`. Never land a copy of a CentralRepo shortcode here: the local one shadows it silently and the two drift.
-- **Built page URLs are flat** — `02hugo/6_deployment_paths.html`, not `.../index.html`. Verification greps that assume a directory index find nothing.
-- **Hugo minifies attributes unquoted** in built output (`class=pathgate data-path=docker`). Grepping for `data-path="docker"` returns zero on markup that is present.
-- **`scripts/{gen_handouts,lint_paths}.py` and `.github/workflows/{path-lint,handout-pdf}.yml` sit inert in this repo** — they're ai-101's printable-handout tooling, copied in so every new workshop gets it for free; nothing runs until `deploymentPaths` is declared. See `content/02Hugo/7_printable_handouts/index.md`.
-- **Before making `lint` or `handouts` a required status check in a repo that adopts this tooling, confirm their `pull_request` triggers still have no `paths:` filter.** A required check whose trigger is path-filtered never reports at all for a PR outside that filter, which blocks merge forever, not just until CI runs — bit `ai-101` the same day its own copies were made required. Already fixed in the copies here (both triggers are unfiltered; the equivalent filtering happens inside each job so a no-op PR still gets a fast, reporting green check).
+- **`docs/` is machine-owned — never put anything there.** CentralRepo's `batch_repo_update.py` deletes it on `main`.
+- **`.github/workflows/static.yml` is template-managed.** CentralRepo's batch update overwrites it, so hand-edits are lost. The same run also manages `layouts/shortcodes/FTNThugoFlow.html`, `docker-compose.yml`, `hugo.toml`, `config.toml` and `scripts/docker_*.sh`.
+- **Change site chrome in `scripts/repoConfig.json`**, never in content.
+- **Repo-local `layouts/` wins over the container's.** Never land a copy of a CentralRepo shortcode here; the two drift.
+- **Built page URLs** for these chapter bundles are directories (`2_architecture/index.html`), so relative links like `../2_architecture/#fortimanager-reachability` resolve.
+- **`package.json`/`package-lock.json` are in `.gitignore` but tracked.** An ignore rule is not evidence that a file is untracked.
+- `.repo_upgrade_version`, `repo_upgrade_spec.json` and `migration_log*.csv` are CentralRepo migration bookkeeping. The CSVs describe the UserRepo template, not this repo; never treat them as input.
+- `scripts/{gen_handouts,lint_paths}.py` and `.github/workflows/{path-lint,handout-pdf}.yml` stay inert until `deploymentPaths` is declared.
+- **Jenkins and new PRs.** Jenkins only gets `push` webhooks, and its multibranch job skips branches that already have an open PR. So a PR opened immediately after a branch's first push may never get a `ci/jenkins/build-status` check. If that check is required, the merge stays blocked.
+- **Merge settings:** squash, merge commit and rebase are all enabled. No branch protection was readable from a non-admin token.
+- `terraform/existing_vpc_resources/verify_scripts/` came from the autoscale repo. It still reads the removed `enable_autoscale_deployment` and `enable_ha_pair_deployment` variables; they come back empty, which is harmless.
